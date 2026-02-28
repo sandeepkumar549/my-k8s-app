@@ -1,0 +1,141 @@
+# Delete old Hyper-V minikube cluster
+minikube delete
+
+# Start fresh with Docker driver
+minikube start --driver=docker
+
+# Verify cluster is running
+kubectl get nodes
+
+# Navigate to project folder
+cd C:\Users\DELL\Desktop\my-k8s-app
+
+# Point terminal to Minikube's internal Docker (IMPORTANT!)
+minikube docker-env | Invoke-Expression
+
+# Build the Docker image
+docker build -t hello-app:v1 .
+
+# Verify image was created
+docker images | Select-String "hello-app"
+
+# 1. Create namespace first
+kubectl apply -f namespace.yaml
+
+# 2. Apply settings
+kubectl apply -f configmap.yaml
+
+# 3. Apply secrets/passwords
+kubectl apply -f secret.yaml
+
+# 4. Deploy the app (3 pods)
+kubectl apply -f deployment.yaml
+
+# 5. Create the service (network road)
+kubectl apply -f service.yaml
+
+# Watch pods come alive
+kubectl get pods -n my-app --watch
+
+# Check deployment status
+kubectl get deployments -n my-app
+
+# Check service
+kubectl get service -n my-app
+
+# Check everything at once
+kubectl get all -n my-app
+
+# Open app in browser automatically
+minikube service hello-app-service -n my-app
+
+# Open Kubernetes visual dashboard
+minikube dashboard
+
+
+# Check why a pod is failing
+kubectl describe pod <pod-name> -n my-app
+
+# Check pod logs
+kubectl logs <pod-name> -n my-app
+
+# Check all pods including errors
+kubectl get pods -n my-app
+
+# Restart all pods
+kubectl rollout restart deployment hello-app -n my-app
+
+# Check rollout status
+kubectl rollout status deployment hello-app -n my-app
+
+
+# Scale up to 5 pods
+kubectl scale deployment hello-app --replicas=5 -n my-app
+
+# Scale back down to 3
+kubectl scale deployment hello-app --replicas=3 -n my-app
+
+# Delete a pod (Kubernetes auto-restarts it!)
+kubectl delete pod <pod-name> -n my-app
+
+# Update to new image version
+kubectl set image deployment/hello-app hello-app=hello-app:v2 -n my-app
+
+# Rollback if something goes wrong
+kubectl rollout undo deployment hello-app -n my-app
+
+
+# Stop minikube (saves everything)
+minikube stop
+
+# Next day — start again
+minikube start --driver=docker
+
+# Then ALWAYS run this before building images
+minikube docker-env | Invoke-Expression
+
+
+# Delete just your app
+kubectl delete namespace my-app
+
+# OR delete the entire minikube cluster
+minikube delete
+```
+
+---
+
+## 📌 The Golden Rules We Learned
+```
+1. Always open Docker Desktop FIRST before minikube start
+2. Always run minikube docker-env | Invoke-Expression before docker build
+3. Always apply configmap + secret BEFORE deployment
+4. imagePullPolicy: Never → tells K8s to use local image
+5. kubectl describe pod → best command to debug any error
+
+
+
+# 1. Open Docker Desktop first (manually)
+
+# 2. Start cluster
+minikube start --driver=docker
+
+# 3. Point to Minikube Docker
+minikube docker-env | Invoke-Expression
+
+# 4. Build image
+cd C:\Users\DELL\Desktop\my-k8s-app
+docker build -t hello-app:v1 .
+
+# 5. Deploy everything
+kubectl apply -f namespace.yaml
+kubectl apply -f configmap.yaml
+kubectl apply -f secret.yaml
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+
+# 6. Check pods
+kubectl get pods -n my-app
+
+# 7. Open in browser
+minikube service hello-app-service -n my-app
+

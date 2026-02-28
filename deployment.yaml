@@ -1,0 +1,71 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-app
+  namespace: my-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hello-app
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: hello-app
+    spec:
+      containers:
+        - name: hello-app
+          image: hello-app:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          env:
+            - name: APP_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-app-config
+                  key: APP_NAME
+            - name: APP_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-app-config
+                  key: APP_ENV
+            - name: GREETING_MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: hello-app-config
+                  key: GREETING_MESSAGE
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hello-app-secret
+                  key: DB_PASSWORD
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: hello-app-secret
+                  key: API_KEY
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "128Mi"
+              cpu: "250m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
