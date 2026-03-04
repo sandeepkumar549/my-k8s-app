@@ -1,0 +1,26 @@
+# 1. Create project folder
+mkdir C:\Users\DELL\Desktop\ubuntu-k8s-app\app
+mkdir C:\Users\DELL\Desktop\ubuntu-k8s-app\k8s
+
+# 2. Copy downloaded files into folders, then:
+cd C:\Users\DELL\Desktop\ubuntu-k8s-app\app
+
+# 3. Point to Minikube Docker
+minikube docker-env | Invoke-Expression
+
+# 4. Build Ubuntu image (takes longer — downloading Ubuntu!)
+docker build -t ubuntu-app:v1 .
+
+# 5. Deploy to Kubernetes
+cd ..\k8s
+kubectl apply -f namespace.yaml
+kubectl apply -f configmap.yaml
+kubectl apply -f secret.yaml
+kubectl apply -f deployment.yaml
+kubectl apply -f service.yaml
+
+# 6. Watch pods start
+kubectl get pods -n my-ubuntu-app --watch
+
+# 7. Open in browser
+minikube service ubuntu-app-service -n my-ubuntu-app

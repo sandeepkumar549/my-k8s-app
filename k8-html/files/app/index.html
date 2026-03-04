@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KubeStore — Deployed on Kubernetes</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --card: #1a1a24;
+      --border: #2a2a3a;
+      --accent: #7c6dfa;
+      --accent2: #fa6d6d;
+      --accent3: #6dfac8;
+      --text: #e8e8f0;
+      --muted: #7a7a96;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,109,250,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,109,250,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Glow orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      animation: float 8s ease-in-out infinite;
+    }
+    .orb1 { width: 400px; height: 400px; background: rgba(124,109,250,0.12); top: -100px; right: -100px; animation-delay: 0s; }
+    .orb2 { width: 300px; height: 300px; background: rgba(109,250,200,0.08); bottom: 100px; left: -80px; animation-delay: 3s; }
+    .orb3 { width: 200px; height: 200px; background: rgba(250,109,109,0.08); top: 50%; left: 50%; animation-delay: 5s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-30px); }
+    }
+
+    /* NAV */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1.2rem 2.5rem;
+      background: rgba(10,10,15,0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.4rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+
+    .nav-badge {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(124,109,250,0.1);
+      border: 1px solid rgba(124,109,250,0.3);
+      padding: 0.4rem 1rem; border-radius: 100px;
+      font-size: 0.8rem; color: var(--accent);
+    }
+
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent3);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.9rem; transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    /* HERO */
+    .hero {
+      position: relative; z-index: 1;
+      text-align: center;
+      padding: 6rem 2rem 4rem;
+      max-width: 800px; margin: 0 auto;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      background: rgba(109,250,200,0.08);
+      border: 1px solid rgba(109,250,200,0.2);
+      color: var(--accent3); font-size: 0.8rem;
+      padding: 0.4rem 1rem; border-radius: 100px;
+      margin-bottom: 1.5rem;
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800; line-height: 1.05;
+      letter-spacing: -0.03em;
+      margin-bottom: 1.2rem;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent3) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--muted); font-size: 1.1rem;
+      line-height: 1.7; max-width: 550px; margin: 0 auto 2.5rem;
+    }
+
+    .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+
+    .btn-primary {
+      background: var(--accent); color: white;
+      padding: 0.8rem 2rem; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 500;
+      border: none; cursor: pointer;
+      transition: all 0.2s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+    }
+    .btn-primary:hover { background: #6a5ce8; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(124,109,250,0.3); }
+
+    .btn-secondary {
+      background: transparent; color: var(--text);
+      padding: 0.8rem 2rem; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 500;
+      border: 1px solid var(--border); cursor: pointer;
+      transition: all 0.2s; text-decoration: none;
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* STATS */
+    .stats {
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px; background: var(--border);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      margin: 2rem 0;
+      animation: fadeUp 0.8s ease 0.2s both;
+    }
+
+    .stat {
+      background: var(--bg); padding: 2rem;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.2rem; font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent3));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label { color: var(--muted); font-size: 0.85rem; margin-top: 0.3rem; }
+
+    /* PRODUCTS SECTION */
+    .section {
+      position: relative; z-index: 1;
+      max-width: 1200px; margin: 0 auto;
+      padding: 4rem 2rem;
+      animation: fadeUp 0.8s ease 0.3s both;
+    }
+
+    .section-header {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem; font-weight: 700;
+    }
+
+    .section-link {
+      color: var(--accent); font-size: 0.9rem;
+      text-decoration: none; display: flex;
+      align-items: center; gap: 0.3rem;
+    }
+
+    /* PRODUCT CARDS */
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .product-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+      transition: all 0.3s; cursor: pointer;
+      position: relative;
+    }
+
+    .product-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--accent);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,109,250,0.2);
+    }
+
+    .product-image {
+      height: 180px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 4rem;
+      position: relative; overflow: hidden;
+    }
+
+    .product-image::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, transparent 50%, var(--card));
+    }
+
+    .badge {
+      position: absolute; top: 12px; left: 12px;
+      background: var(--accent2); color: white;
+      font-size: 0.7rem; font-weight: 600;
+      padding: 0.2rem 0.6rem; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      z-index: 1;
+    }
+
+    .badge.new { background: var(--accent3); color: #0a0a0f; }
+    .badge.sale { background: var(--accent2); }
+
+    .product-info { padding: 1.2rem; }
+
+    .product-category {
+      font-size: 0.75rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+
+    .product-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 1rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .product-bottom {
+      display: flex; align-items: center;
+      justify-content: space-between; margin-top: 1rem;
+    }
+
+    .price {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--accent);
+    }
+
+    .old-price {
+      font-size: 0.85rem; color: var(--muted);
+      text-decoration: line-through; margin-left: 0.4rem;
+    }
+
+    .add-btn {
+      background: rgba(124,109,250,0.15);
+      border: 1px solid rgba(124,109,250,0.3);
+      color: var(--accent); border-radius: 8px;
+      padding: 0.5rem 1rem; font-size: 0.85rem;
+      cursor: pointer; transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .add-btn:hover {
+      background: var(--accent); color: white;
+      transform: scale(1.05);
+    }
+
+    /* FEATURES */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem; margin-top: 2rem;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px; padding: 1.8rem;
+      transition: border-color 0.3s;
+    }
+
+    .feature-card:hover { border-color: var(--accent3); }
+
+    .feature-icon {
+      font-size: 2rem; margin-bottom: 1rem;
+      display: inline-block;
+    }
+
+    .feature-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-desc { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+    /* K8S INFO BANNER */
+    .k8s-banner {
+      position: relative; z-index: 1;
+      margin: 2rem;
+      background: linear-gradient(135deg, rgba(124,109,250,0.1), rgba(109,250,200,0.05));
+      border: 1px solid rgba(124,109,250,0.2);
+      border-radius: 20px; padding: 2.5rem;
+      display: flex; align-items: center; gap: 2rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.8s ease 0.4s both;
+    }
+
+    .k8s-icon { font-size: 3rem; }
+
+    .k8s-info h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem; font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .k8s-info p { color: var(--muted); font-size: 0.9rem; line-height: 1.6; }
+
+    .k8s-tags { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem; }
+
+    .tag {
+      background: rgba(124,109,250,0.1);
+      border: 1px solid rgba(124,109,250,0.2);
+      color: var(--accent); font-size: 0.78rem;
+      padding: 0.3rem 0.8rem; border-radius: 100px;
+    }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 2rem; right: 2rem;
+      background: var(--card); border: 1px solid var(--accent3);
+      color: var(--text); padding: 1rem 1.5rem;
+      border-radius: 12px; font-size: 0.9rem;
+      display: flex; align-items: center; gap: 0.8rem;
+      transform: translateY(100px); opacity: 0;
+      transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 1000;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* FOOTER */
+    footer {
+      position: relative; z-index: 1;
+      text-align: center; padding: 3rem 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted); font-size: 0.85rem;
+    }
+
+    footer span { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <!-- Background effects -->
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+
+  <!-- NAV -->
+  <nav>
+    <div class="logo">⚡ KubeStore</div>
+    <div class="nav-links">
+      <a href="#">Products</a>
+      <a href="#">Features</a>
+      <a href="#">About</a>
+    </div>
+    <div class="nav-badge">
+      <div class="dot"></div>
+      Running on Kubernetes
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">☸️ Deployed with Kubernetes on Minikube</div>
+    <h1>Your Store,<br/><span>Scaled Infinitely</span></h1>
+    <p>A production-grade web application deployed on Kubernetes with 3 replicas, auto-scaling, ConfigMaps, Secrets, and zero-downtime rolling updates.</p>
+    <div class="hero-buttons">
+      <a href="#products" class="btn-primary">🛍️ Browse Products</a>
+      <a href="#features" class="btn-secondary">Learn More</a>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-number">3</div>
+      <div class="stat-label">Pods Running</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">99.9%</div>
+      <div class="stat-label">Uptime</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">0s</div>
+      <div class="stat-label">Downtime on Deploy</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">10x</div>
+      <div class="stat-label">Max Auto-Scale</div>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="section" id="products">
+    <div class="section-header">
+      <h2 class="section-title">Featured Products</h2>
+      <a href="#" class="section-link">View all →</a>
+    </div>
+    <div class="products">
+
+      <div class="product-card">
+        <div class="product-image" style="background: linear-gradient(135deg, #1a1a2e, #16213e);">
+          🎧
+          <div class="badge new">New</div>
+        </div>
+        <div class="product-info">
+          <div class="product-category">Audio</div>
+          <div class="product-name">Pro Wireless Headphones</div>
+          <div class="product-bottom">
+            <div><span class="price">$129</span><span class="old-price">$199</span></div>
+            <button class="add-btn" onclick="addToCart('Headphones')">Add +</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: linear-gradient(135deg, #0d1b2a, #1b2838);">
+          ⌨️
+          <div class="badge sale">Sale</div>
+        </div>
+        <div class="product-info">
+          <div class="product-category">Peripherals</div>
+          <div class="product-name">Mechanical Keyboard RGB</div>
+          <div class="product-bottom">
+            <div><span class="price">$89</span><span class="old-price">$120</span></div>
+            <button class="add-btn" onclick="addToCart('Keyboard')">Add +</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: linear-gradient(135deg, #1a0a2e, #2d1b69);">
+          🖥️
+        </div>
+        <div class="product-info">
+          <div class="product-category">Display</div>
+          <div class="product-name">4K Ultra Monitor 27"</div>
+          <div class="product-bottom">
+            <div><span class="price">$349</span></div>
+            <button class="add-btn" onclick="addToCart('Monitor')">Add +</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: linear-gradient(135deg, #0a1a0a, #1a2e1a);">
+          🖱️
+          <div class="badge new">New</div>
+        </div>
+        <div class="product-info">
+          <div class="product-category">Peripherals</div>
+          <div class="product-name">Ergonomic Pro Mouse</div>
+          <div class="product-bottom">
+            <div><span class="price">$59</span></div>
+            <button class="add-btn" onclick="addToCart('Mouse')">Add +</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: linear-gradient(135deg, #1a1500, #2e2500);">
+          💻
+          <div class="badge sale">Sale</div>
+        </div>
+        <div class="product-info">
+          <div class="product-category">Computing</div>
+          <div class="product-name">Developer Laptop 16"</div>
+          <div class="product-bottom">
+            <div><span class="price">$1299</span><span class="old-price">$1599</span></div>
+            <button class="add-btn" onclick="addToCart('Laptop')">Add +</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="product-card">
+        <div class="product-image" style="background: linear-gradient(135deg, #1a0a0a, #2e1a1a);">
+          📷
+        </div>
+        <div class="product-info">
+          <div class="product-category">Camera</div>
+          <div class="product-name">4K Webcam Ultra HD</div>
+          <div class="product-bottom">
+            <div><span class="price">$149</span></div>
+            <button class="add-btn" onclick="addToCart('Webcam')">Add +</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- K8S BANNER -->
+  <div class="k8s-banner">
+    <div class="k8s-icon">☸️</div>
+    <div class="k8s-info">
+      <h3>Powered by Kubernetes</h3>
+      <p>This app is running inside a Kubernetes cluster with 3 replicas, auto-healing pods, rolling updates, and horizontal auto-scaling. If any pod crashes, Kubernetes instantly creates a new one.</p>
+      <div class="k8s-tags">
+        <span class="tag">3 Replicas</span>
+        <span class="tag">Rolling Updates</span>
+        <span class="tag">Auto Healing</span>
+        <span class="tag">ConfigMap</span>
+        <span class="tag">Secrets</span>
+        <span class="tag">NodePort Service</span>
+        <span class="tag">HPA Ready</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div class="section" id="features">
+    <div class="section-header">
+      <h2 class="section-title">Why Kubernetes?</h2>
+    </div>
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <div class="feature-title">Zero Downtime Updates</div>
+        <div class="feature-desc">Rolling updates replace pods one by one. Your users never see downtime — even during deployments.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">❤️</div>
+        <div class="feature-title">Self Healing</div>
+        <div class="feature-desc">If a pod crashes, Kubernetes detects it and automatically starts a new one within seconds.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <div class="feature-title">Auto Scaling</div>
+        <div class="feature-desc">HPA watches CPU and memory. When traffic spikes, it adds more pods. When quiet, it removes them.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <div class="feature-title">Secure Secrets</div>
+        <div class="feature-desc">Passwords and API keys are stored in Kubernetes Secrets — encrypted and never exposed in code.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <div class="feature-title">Config Management</div>
+        <div class="feature-desc">App settings live in ConfigMaps. Change config without rebuilding the Docker image.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <div class="feature-title">Service Discovery</div>
+        <div class="feature-desc">Services give pods a stable address. Even when pods restart with new IPs, the Service URL stays the same.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Built with ❤️ and deployed on <span>Kubernetes</span> · Running on Minikube · Windows 11</p>
+    <p style="margin-top: 0.5rem;">namespace: my-html-app · replicas: 3 · image: html-app:v1</p>
+  </footer>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <span>✅</span>
+    <span id="toast-msg">Added to cart!</span>
+  </div>
+
+  <script>
+    let cartCount = 0;
+
+    function addToCart(item) {
+      cartCount++;
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').textContent = `${item} added to cart! (${cartCount} items)`;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const el = document.querySelector(a.getAttribute('href'));
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  </script>
+</body>
+</html>

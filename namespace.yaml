@@ -1,0 +1,11 @@
+# namespace.yaml
+# Think of this as creating a neighborhood called "my-app"
+# All our stuff lives here, separate from other apps
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: my-app
+  labels:
+    app: hello-app
+    environment: production

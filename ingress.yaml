@@ -1,0 +1,38 @@
+# ingress.yaml
+# The FRONT GATE 🚪 — gives your app a real web address.
+# Requires an Ingress Controller (like nginx-ingress) installed in the cluster.
+#
+# Install nginx ingress: 
+#   kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.9.4/deploy/static/provider/cloud/deploy.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-app-ingress
+  namespace: my-app
+  annotations:
+    # Use nginx as our ingress controller
+    kubernetes.io/ingress.class: nginx
+    # Auto-redirect HTTP to HTTPS
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Limit request body size
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  # TLS (HTTPS) configuration
+  tls:
+    - hosts:
+        - hello.myapp.com
+      secretName: hello-app-tls  # A separate TLS Secret with your SSL cert
+
+  rules:
+    # Route traffic for hello.myapp.com to our service
+    - host: hello.myapp.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: hello-app-service   # The Service we created
+                port:
+                  number: 80

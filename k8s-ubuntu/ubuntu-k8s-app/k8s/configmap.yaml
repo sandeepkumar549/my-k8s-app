@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ubuntu-app-config
+  namespace: my-ubuntu-app
+data:
+  APP_NAME: "Ubuntu K8s App"
+  APP_ENV: "production"
+  APP_VERSION: "v1"
+  BASE_IMAGE: "ubuntu:22.04"

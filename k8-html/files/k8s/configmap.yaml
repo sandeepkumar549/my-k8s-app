@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: html-app-config
+  namespace: my-html-app
+data:
+  APP_NAME: "KubeStore"
+  APP_ENV: "production"
+  APP_VERSION: "v1"
