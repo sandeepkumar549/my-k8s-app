@@ -1,5 +1,5 @@
 # Delete old Hyper-V minikube cluster
-minikube delete or minikube delete --all --purge
+minikube delete
 
 # Start fresh with Docker driver
 minikube start --driver=docker
@@ -52,8 +52,6 @@ minikube service hello-app-service -n my-app
 # Open Kubernetes visual dashboard
 minikube dashboard
 
-# Check pods
-kubectl get pods -n my-app
 
 # Check why a pod is failing
 kubectl describe pod <pod-name> -n my-app
@@ -82,9 +80,6 @@ kubectl delete pod <pod-name> -n my-app
 
 # Update to new image version
 kubectl set image deployment/hello-app hello-app=hello-app:v2 -n my-app
-kubectl describe deployment hello-app -n my-app
-kubectl get deployment hello-app -n my-app -o wide
-kubectl rollout history deployment hello-app -n my-app
 
 # Rollback if something goes wrong
 kubectl rollout undo deployment hello-app -n my-app
